@@ -37,11 +37,11 @@ export const HeaderBar: React.FC = () => {
             <User size={24} color={COLORS.primary} />
           )}
         </View>
-        <View>
-          <Text style={styles.greeting}>
+        <View style={{ flex: 1, marginRight: 8 }}>
+          <Text style={styles.greeting} numberOfLines={1}>
             {role === 'caregiver' ? 'Caregiver Portal' : 'CogniCare Companion'}
           </Text>
-          <Text style={styles.userName}>
+          <Text style={styles.userName} numberOfLines={1}>
             {currentUser ? currentUser.name : 'Guest'}
           </Text>
         </View>
@@ -88,6 +88,7 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.cardBorder,
   },
   leftContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,

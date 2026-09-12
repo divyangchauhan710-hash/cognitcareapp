@@ -1,5 +1,6 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Brain, User, CheckCircle, ArrowLeft, HelpCircle, Heart } from 'lucide-react-native';
 import { HeaderBar } from '../../components/HeaderBar';
 import { PrimaryButton } from '../../components/PrimaryButton';

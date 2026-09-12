@@ -1,5 +1,6 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import {
   Play,
   Gamepad2,
@@ -142,9 +143,10 @@ const styles = StyleSheet.create({
   },
   quickGrid: {
     flexDirection: 'row',
-    gap: 12,
+    marginHorizontal: -6,
   },
   gridColumn: {
     flex: 1,
+    paddingHorizontal: 6,
   },
 });

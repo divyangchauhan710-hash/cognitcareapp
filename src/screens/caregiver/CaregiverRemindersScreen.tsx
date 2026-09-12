@@ -1,5 +1,6 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput } from 'react-native';
 import { Bell, ArrowLeft, Plus } from 'lucide-react-native';
 import { HeaderBar } from '../../components/HeaderBar';
 import { SectionHeader } from '../../components/SectionHeader';
