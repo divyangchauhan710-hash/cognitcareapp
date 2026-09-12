@@ -18,7 +18,10 @@
     "react-native-svg": "15.11.1"
   },
   "devDependencies": {
+    "@expo/metro-config": "^57.0.12",
     "@types/react": "~19.2.2",
+    "metro": "^0.87.0",
+    "metro-config": "^0.87.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
