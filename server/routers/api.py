@@ -4,13 +4,13 @@ from typing import List
 
 from server.database import get_db
 from server.models import (
-    PatientProfileModel,
+    UserModel,
     GameSessionModel,
     MemoryModel,
     ReminderModel,
 )
 from server.schemas import (
-    PatientSchema,
+    UserResponse,
     GameSessionSchema,
     MemorySchema,
     ReminderSchema,
@@ -21,30 +21,17 @@ from server.schemas import (
 router = APIRouter(prefix="/api", tags=["CogniCare API"])
 
 # --- PATIENTS ---
-@router.get("/patients", response_model=List[PatientSchema])
+@router.get("/patients", response_model=List[UserResponse])
 def get_patients(db: Session = Depends(get_db)):
-    patients = db.query(PatientProfileModel).all()
-    return [
-        PatientSchema(
-            id=p.id,
-            name=p.name,
-            age=p.age,
-            caregiverName=p.caregiver_name,
-        )
-        for p in patients
-    ]
+    patients = db.query(UserModel).filter(UserModel.role == "patient").all()
+    return patients
 
-@router.get("/patients/{patient_id}", response_model=PatientSchema)
+@router.get("/patients/{patient_id}", response_model=UserResponse)
 def get_patient_detail(patient_id: str, db: Session = Depends(get_db)):
-    patient = db.query(PatientProfileModel).filter(PatientProfileModel.id == patient_id).first()
+    patient = db.query(UserModel).filter(UserModel.id == patient_id, UserModel.role == "patient").first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    return PatientSchema(
-        id=patient.id,
-        name=patient.name,
-        age=patient.age,
-        caregiverName=patient.caregiver_name,
-    )
+    return patient
 
 # --- GAME SESSIONS ---
 @router.get("/game-sessions", response_model=List[GameSessionSchema])

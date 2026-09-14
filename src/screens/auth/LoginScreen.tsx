@@ -1,21 +1,69 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { Brain, User, Users, ShieldCheck, ArrowRight } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { Brain, ShieldCheck, Mail, Lock } from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { SecondaryButton } from '../../components/SecondaryButton';
 import { COLORS } from '../../constants/colors';
 import { TYPOGRAPHY } from '../../constants/typography';
-import { DEMO_PATIENT, DEMO_CAREGIVER } from '../../constants/demoData';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
 
-export const LoginScreen: React.FC = () => {
-  const { loginAsPatient, loginAsCaregiver } = useAuth();
+WebBrowser.maybeCompleteAuthSession();
+
+export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { login, googleLogin } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Configure Google Login - Note: Add your actual client IDs later
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: "ANDROID_CLIENT_ID", 
+    iosClientId: "IOS_CLIENT_ID",
+    webClientId: "WEB_CLIENT_ID",
+  });
+
+  React.useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+      if (id_token) {
+        handleGoogleLogin(id_token);
+      }
+    }
+  }, [response]);
+
+  const handleGoogleLogin = async (idToken: string) => {
+    try {
+      setLoading(true);
+      // Default to patient for Google Login - you might want a role selector screen if they are new
+      await googleLogin(idToken, 'patient');
+    } catch (e: any) {
+      Alert.alert("Error", e.message || "Failed to login with Google");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter email and password");
+      return;
+    }
+    try {
+      setLoading(true);
+      await login(email, password);
+    } catch (e: any) {
+      Alert.alert("Error", e.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Brand Header */}
         <View style={styles.brandContainer}>
           <View style={styles.logoBadge}>
             <Brain size={48} color={COLORS.primary} />
@@ -26,64 +74,61 @@ export const LoginScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Demo Account Cards */}
-        <View style={styles.cardContainer}>
-          <Text style={styles.sectionHeader}>Select Demo Role to Continue</Text>
-
-          {/* Patient Card */}
-          <View style={styles.demoCard}>
-            <View style={styles.cardHeader}>
-              <View style={styles.patientBadge}>
-                <User size={28} color={COLORS.primary} />
-              </View>
-              <View style={styles.cardHeaderInfo}>
-                <Text style={styles.cardRoleLabel}>Patient Mode</Text>
-                <Text style={styles.cardUserName}>{DEMO_PATIENT.name}</Text>
-                <Text style={styles.cardUserMeta}>Age: {DEMO_PATIENT.age} • High Contrast UI</Text>
-              </View>
-            </View>
-            <Text style={styles.cardDescription}>
-              Simple, high-contrast interface designed for cognitive training, daily reminders, and personal memory recall.
-            </Text>
-            <PrimaryButton
-              title="Enter as Patient (Rita Devi)"
-              icon={ArrowRight}
-              variant="primary"
-              onPress={loginAsPatient}
-              style={{ marginTop: 12 }}
+        <View style={styles.formContainer}>
+          <Text style={styles.sectionHeader}>Login to your account</Text>
+          
+          <View style={styles.inputGroup}>
+            <Mail size={20} color={COLORS.textSecondary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Email address"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
             />
           </View>
 
-          {/* Caregiver Card */}
-          <View style={[styles.demoCard, styles.caregiverDemoCard]}>
-            <View style={styles.cardHeader}>
-              <View style={styles.caregiverBadge}>
-                <Users size={28} color={COLORS.caregiverPrimary} />
-              </View>
-              <View style={styles.cardHeaderInfo}>
-                <Text style={styles.cardRoleLabel}>Caregiver Mode</Text>
-                <Text style={styles.cardUserName}>{DEMO_CAREGIVER.name}</Text>
-                <Text style={styles.cardUserMeta}>Monitoring & Memory Management</Text>
-              </View>
-            </View>
-            <Text style={styles.cardDescription}>
-              Caregiver dashboard for monitoring task performance trends, creating memory bank items, and scheduling reminders.
-            </Text>
-            <PrimaryButton
-              title="Enter as Caregiver"
-              icon={ArrowRight}
-              variant="caregiver"
-              onPress={loginAsCaregiver}
-              style={{ marginTop: 12 }}
+          <View style={styles.inputGroup}>
+            <Lock size={20} color={COLORS.textSecondary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
             />
           </View>
+
+          {loading ? (
+            <ActivityIndicator size="large" color={COLORS.primary} style={{ marginVertical: 12 }} />
+          ) : (
+            <>
+              <PrimaryButton
+                title="Log In"
+                onPress={handleLogin}
+                variant="primary"
+                style={{ marginTop: 12 }}
+              />
+              <SecondaryButton
+                title="Continue with Google"
+                onPress={() => promptAsync()}
+                style={{ marginTop: 12 }}
+              />
+            </>
+          )}
+
+          <SecondaryButton
+            title="Create an Account"
+            onPress={() => navigation.navigate('Register')}
+            style={{ marginTop: 12, borderWidth: 0 }}
+          />
         </View>
 
-        {/* Ethics & Non-Medical Notice */}
         <View style={styles.noticeContainer}>
           <ShieldCheck size={20} color={COLORS.textMuted} />
           <Text style={styles.noticeText}>
-            CogniCare is a cognitive assistance and memory training platform. It does not provide medical diagnoses or predict disease conditions.
+            CogniCare does not provide medical diagnoses or predict disease conditions.
           </Text>
         </View>
       </ScrollView>
@@ -92,120 +137,32 @@ export const LoginScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  container: {
-    padding: 20,
-    justifyContent: 'center',
-    minHeight: '100%',
-  },
-  brandContainer: {
-    alignItems: 'center',
-    marginVertical: 24,
-  },
+  safeArea: { flex: 1, backgroundColor: COLORS.background },
+  container: { padding: 20, justifyContent: 'center', minHeight: '100%' },
+  brandContainer: { alignItems: 'center', marginVertical: 24 },
   logoBadge: {
-    width: 84,
-    height: 84,
-    borderRadius: 24,
-    backgroundColor: COLORS.infoBg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
+    width: 84, height: 84, borderRadius: 24, backgroundColor: COLORS.infoBg,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 12,
   },
-  appTitle: {
-    ...TYPOGRAPHY.titleLarge,
-    fontSize: 32,
-    color: COLORS.primary,
-  },
+  appTitle: { ...TYPOGRAPHY.titleLarge, fontSize: 32, color: COLORS.primary },
   appTagline: {
-    ...TYPOGRAPHY.bodyMedium,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    marginTop: 6,
-    paddingHorizontal: 20,
+    ...TYPOGRAPHY.bodyMedium, color: COLORS.textSecondary,
+    textAlign: 'center', marginTop: 6, paddingHorizontal: 20,
   },
-  cardContainer: {
-    marginVertical: 12,
-  },
+  formContainer: { marginVertical: 12 },
   sectionHeader: {
-    ...TYPOGRAPHY.titleSmall,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    marginBottom: 16,
+    ...TYPOGRAPHY.titleSmall, color: COLORS.textSecondary, textAlign: 'center', marginBottom: 16,
   },
-  demoCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 2,
-    borderColor: COLORS.cardBorder,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+  inputGroup: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.cardBg, borderWidth: 1, borderColor: COLORS.cardBorder,
+    borderRadius: 12, paddingHorizontal: 12, marginBottom: 16,
   },
-  caregiverDemoCard: {
-    borderColor: COLORS.caregiverLight,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    marginBottom: 12,
-  },
-  patientBadge: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: COLORS.infoBg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  caregiverBadge: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: COLORS.caregiverLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cardHeaderInfo: {
-    flex: 1,
-  },
-  cardRoleLabel: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.textSecondary,
-    textTransform: 'uppercase',
-  },
-  cardUserName: {
-    ...TYPOGRAPHY.titleMedium,
-    color: COLORS.textPrimary,
-  },
-  cardUserMeta: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.textMuted,
-  },
-  cardDescription: {
-    ...TYPOGRAPHY.bodyMedium,
-    color: COLORS.textSecondary,
-    marginBottom: 8,
-  },
+  inputIcon: { marginRight: 8 },
+  input: { flex: 1, paddingVertical: 14, ...TYPOGRAPHY.bodyLarge, color: COLORS.textPrimary },
   noticeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: COLORS.cardHover,
-    padding: 14,
-    borderRadius: 14,
-    marginTop: 12,
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: COLORS.cardHover, padding: 14, borderRadius: 14, marginTop: 12,
   },
-  noticeText: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.textMuted,
-    flex: 1,
-  },
+  noticeText: { ...TYPOGRAPHY.caption, color: COLORS.textMuted, flex: 1 },
 });

@@ -1,11 +1,51 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
+from datetime import datetime
 
-class PatientSchema(BaseModel):
+class UserBase(BaseModel):
+    email: EmailStr
+    role: str
+    name: str
+
+class UserCreate(UserBase):
+    password: str
+
+class GoogleLogin(BaseModel):
+    id_token: str
+    role: str
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserResponse(UserBase):
+    id: str
+    pfp_url: Optional[str] = None
+    emergency_number: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class ConnectionRequestBase(BaseModel):
+    patient_email: EmailStr
+
+class ConnectionRequestResponse(BaseModel):
+    id: str
+    caregiver_id: str
+    patient_id: str
+    status: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class ConnectionResponse(BaseModel):
     id: str
     name: str
-    age: int
-    caregiverName: Optional[str] = "Demo Caregiver"
+    email: str
+    role: str
+    pfp_url: Optional[str] = None
 
 class GameSessionSchema(BaseModel):
     id: str
@@ -46,7 +86,7 @@ class ReminderSchema(BaseModel):
     description: Optional[str] = ""
     status: str = "pending"
     repeatPattern: Optional[str] = "daily"
-    createdBy: Optional[str] = "Demo Caregiver"
+    createdBy: Optional[str] = None
     createdAt: str
     updatedAt: str
     syncStatus: Optional[str] = "synced"

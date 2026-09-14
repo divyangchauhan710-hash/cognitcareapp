@@ -9,6 +9,8 @@ import { MemoryBankScreen } from '../screens/patient/MemoryBankScreen';
 import { PersonalizedMemoryActivityScreen } from '../screens/patient/PersonalizedMemoryActivityScreen';
 import { RemindersScreen } from '../screens/patient/RemindersScreen';
 import { ProgressScreen } from '../screens/patient/ProgressScreen';
+import { ProfileScreen } from '../screens/shared/ProfileScreen';
+import { ConnectionsScreen } from '../screens/shared/ConnectionsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +26,8 @@ export const PatientNavigator = () => {
       <Stack.Screen name="PersonalizedMemoryActivity" component={PersonalizedMemoryActivityScreen} />
       <Stack.Screen name="Reminders" component={RemindersScreen} />
       <Stack.Screen name="Progress" component={ProgressScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="Connections" component={ConnectionsScreen} />
     </Stack.Navigator>
   );
 };

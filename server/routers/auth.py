@@ -1,0 +1,108 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
+from passlib.context import CryptContext
+import jwt
+import requests
+from ..database import get_db
+from .. import models, schemas
+
+SECRET_KEY = "dummy-secret-key-for-dev"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+# Dependency to get current user
+def get_current_user(token: str, db: Session):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+    except:
+        return None
+    return db.query(models.UserModel).filter(models.UserModel.id == user_id).first()
+
+@router.post("/register", response_model=schemas.UserResponse)
+def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(models.UserModel).filter(models.UserModel.email == user.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    hashed_password = get_password_hash(user.password)
+    new_user = models.UserModel(
+        email=user.email,
+        hashed_password=hashed_password,
+        role=user.role,
+        name=user.name
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+@router.post("/login")
+def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
+    db_user = db.query(models.UserModel).filter(models.UserModel.email == user.email).first()
+    if not db_user or not db_user.hashed_password:
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
+    
+    if not verify_password(user.password, db_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
+    
+    access_token = create_access_token(data={"sub": db_user.id, "role": db_user.role})
+    return {"access_token": access_token, "token_type": "bearer", "user": db_user}
+
+@router.post("/google-login")
+def google_login(google_data: schemas.GoogleLogin, db: Session = Depends(get_db)):
+    try:
+        response = requests.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={google_data.id_token}")
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail="Invalid Google token")
+        
+        user_info = response.json()
+        email = user_info.get("email")
+        name = user_info.get("name")
+        google_id = user_info.get("sub")
+        pfp_url = user_info.get("picture")
+
+        if not email:
+            raise HTTPException(status_code=400, detail="Token did not provide an email")
+            
+        db_user = db.query(models.UserModel).filter(models.UserModel.email == email).first()
+        
+        if not db_user:
+            db_user = models.UserModel(
+                email=email,
+                role=google_data.role,
+                name=name,
+                google_id=google_id,
+                pfp_url=pfp_url
+            )
+            db.add(db_user)
+            db.commit()
+            db.refresh(db_user)
+        elif not db_user.google_id:
+            db_user.google_id = google_id
+            db.commit()
+            db.refresh(db_user)
+            
+        access_token = create_access_token(data={"sub": db_user.id, "role": db_user.role})
+        return {"access_token": access_token, "token_type": "bearer", "user": db_user}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
