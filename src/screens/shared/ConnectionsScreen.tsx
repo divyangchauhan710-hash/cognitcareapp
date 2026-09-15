@@ -9,7 +9,7 @@ import { COLORS } from '../../constants/colors';
 import { TYPOGRAPHY } from '../../constants/typography';
 import { UserPlus, User, Check, X } from 'lucide-react-native';
 
-const API_URL = "https://cognitcareapp.onrender.com/";
+const API_URL = "https://cognitcareapp.onrender.com";
 
 export const ConnectionsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { currentUser, role } = useAuth();
