@@ -9,7 +9,7 @@ import { COLORS } from '../../constants/colors';
 import { TYPOGRAPHY } from '../../constants/typography';
 import { UserPlus, User, Check, X } from 'lucide-react-native';
 
-const API_URL = "http://10.0.2.2:8000";
+const API_URL = "http://10.253.225.76:8000";
 
 export const ConnectionsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { currentUser, role } = useAuth();

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "cognitcareapp",
-    "slug": "cognitcareapp",
+    "slug": "cognit-careapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -17,19 +17,27 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.divyanng.cognitcareapp"
+      "package": "com.divyannng.cognitcareapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "ba118064-597b-4246-88e3-d91d4745f3be"
-      }
-    },
     "plugins": [
       "expo-sqlite",
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5558f3eb-526d-46c9-a0b4-a6969be96857"
+      }
+    }
   }
 }

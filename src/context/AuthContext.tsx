@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { UserRole } from '../types';
 
 // Update with your machine's IP for physical device, or 10.0.2.2 for Android emulator
-const API_URL = "http://10.0.2.2:8000";
+const API_URL = "http://10.253.225.76:8000";
 
 interface AuthContextType {
   currentUser: any | null;
@@ -12,7 +12,6 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
-  googleLogin: (idToken: string, role: UserRole) => Promise<void>;
   logout: () => void;
 }
 
@@ -78,23 +77,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const googleLogin = async (idToken: string, selectedRole: UserRole) => {
-    try {
-      const response = await fetch(`${API_URL}/auth/google-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_token: idToken, role: selectedRole })
-      });
-      if (!response.ok) throw new Error("Google login failed");
-      
-      const data = await response.json();
-      await persistAuth(data.access_token, data.user);
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  };
-
   const persistAuth = async (newToken: string, user: any) => {
     await SecureStore.setItemAsync('userToken', newToken);
     await SecureStore.setItemAsync('userObj', JSON.stringify(user));
@@ -120,7 +102,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         register,
-        googleLogin,
         logout,
       }}
     >

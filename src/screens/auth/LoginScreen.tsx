@@ -7,44 +7,12 @@ import { PrimaryButton } from '../../components/PrimaryButton';
 import { SecondaryButton } from '../../components/SecondaryButton';
 import { COLORS } from '../../constants/colors';
 import { TYPOGRAPHY } from '../../constants/typography';
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
-
-WebBrowser.maybeCompleteAuthSession();
 
 export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { login, googleLogin } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // Configure Google Login - Note: Add your actual client IDs later
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: "ANDROID_CLIENT_ID", 
-    iosClientId: "IOS_CLIENT_ID",
-    webClientId: "WEB_CLIENT_ID",
-  });
-
-  React.useEffect(() => {
-    if (response?.type === 'success') {
-      const { id_token } = response.params;
-      if (id_token) {
-        handleGoogleLogin(id_token);
-      }
-    }
-  }, [response]);
-
-  const handleGoogleLogin = async (idToken: string) => {
-    try {
-      setLoading(true);
-      // Default to patient for Google Login - you might want a role selector screen if they are new
-      await googleLogin(idToken, 'patient');
-    } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to login with Google");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -103,19 +71,12 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           {loading ? (
             <ActivityIndicator size="large" color={COLORS.primary} style={{ marginVertical: 12 }} />
           ) : (
-            <>
-              <PrimaryButton
-                title="Log In"
-                onPress={handleLogin}
-                variant="primary"
-                style={{ marginTop: 12 }}
-              />
-              <SecondaryButton
-                title="Continue with Google"
-                onPress={() => promptAsync()}
-                style={{ marginTop: 12 }}
-              />
-            </>
+            <PrimaryButton
+              title="Log In"
+              onPress={handleLogin}
+              variant="primary"
+              style={{ marginTop: 12 }}
+            />
           )}
 
           <SecondaryButton
