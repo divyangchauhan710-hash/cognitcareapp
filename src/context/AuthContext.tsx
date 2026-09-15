@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { UserRole } from '../types';
 
 // Update with your machine's IP for physical device, or 10.0.2.2 for Android emulator
-const API_URL = "http://10.253.225.76:8000";
+const API_URL = "https://cognitcareapp.onrender.com/";
 
 interface AuthContextType {
   currentUser: any | null;
