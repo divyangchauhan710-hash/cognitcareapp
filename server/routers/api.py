@@ -35,7 +35,7 @@ def get_patient_detail(patient_id: str, db: Session = Depends(get_db)):
 
 # --- GAME SESSIONS ---
 @router.get("/game-sessions", response_model=List[GameSessionSchema])
-def get_game_sessions(patient_id: str = "patient-rita-72", db: Session = Depends(get_db)):
+def get_game_sessions(patient_id: str, db: Session = Depends(get_db)):
     sessions = db.query(GameSessionModel).filter(GameSessionModel.patient_id == patient_id).all()
     return [
         GameSessionSchema(
@@ -75,7 +75,7 @@ def create_game_session(payload: GameSessionSchema, db: Session = Depends(get_db
 
 # --- MEMORIES ---
 @router.get("/memories", response_model=List[MemorySchema])
-def get_memories(patient_id: str = "patient-rita-72", db: Session = Depends(get_db)):
+def get_memories(patient_id: str, db: Session = Depends(get_db)):
     memories = db.query(MemoryModel).filter(MemoryModel.patient_id == patient_id).all()
     return [
         MemorySchema(
@@ -119,7 +119,7 @@ def delete_memory(memory_id: str, db: Session = Depends(get_db)):
 
 # --- REMINDERS ---
 @router.get("/reminders", response_model=List[ReminderSchema])
-def get_reminders(patient_id: str = "patient-rita-72", db: Session = Depends(get_db)):
+def get_reminders(patient_id: str, db: Session = Depends(get_db)):
     reminders = db.query(ReminderModel).filter(ReminderModel.patient_id == patient_id).all()
     return [
         ReminderSchema(

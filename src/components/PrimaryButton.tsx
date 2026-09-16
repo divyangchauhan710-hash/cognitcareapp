@@ -1,13 +1,12 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet, View, ViewStyle, TextStyle } from 'react-native';
-import { LucideIcon } from 'lucide-react-native';
 import { COLORS } from '../constants/colors';
 import { TYPOGRAPHY } from '../constants/typography';
 
 interface PrimaryButtonProps {
   title: string;
   onPress: () => void;
-  icon?: LucideIcon;
+  icon?: any;
   variant?: 'primary' | 'teal' | 'caregiver' | 'success' | 'danger' | 'hero';
   disabled?: boolean;
   style?: ViewStyle;

@@ -23,7 +23,6 @@ import {
   Eye,
   Check,
   ArrowLeft,
-  LucideIcon,
 } from 'lucide-react-native';
 import { HeaderBar } from '../../components/HeaderBar';
 import { PrimaryButton } from '../../components/PrimaryButton';
@@ -38,11 +37,13 @@ import {
 import { GameSession } from '../../types';
 
 import { VoiceService } from '../../services/voiceService';
+import { useAuth } from '../../context/AuthContext';
+import { useData } from '../../context/DataContext';
 
 interface GameObject {
   id: string;
   name: string;
-  icon: LucideIcon;
+  icon: any;
 }
 
 const ALL_GAME_OBJECTS: GameObject[] = [
@@ -63,6 +64,8 @@ const ALL_GAME_OBJECTS: GameObject[] = [
 export const MemoryRecallGameScreen: React.FC<{ navigation: any }> = ({
   navigation,
 }) => {
+  const { currentUser } = useAuth();
+  const { addGameSession } = useData();
   // Game Phase: 'memorize' | 'recall' | 'completed'
   const [phase, setPhase] = useState<'memorize' | 'recall' | 'completed'>('memorize');
   const [currentDifficulty, setCurrentDifficulty] = useState<number>(2);
@@ -157,7 +160,7 @@ export const MemoryRecallGameScreen: React.FC<{ navigation: any }> = ({
     // Create session record
     const newSession: GameSession = {
       id: `gs-${Date.now()}`,
-      patientId: 'patient-rita-72',
+      patientId: currentUser?.id || 'unknown',
       gameType: 'memory_recall',
       score,
       accuracy,
@@ -166,10 +169,11 @@ export const MemoryRecallGameScreen: React.FC<{ navigation: any }> = ({
       totalQuestions,
       difficultyLevel: currentDifficulty,
       timestamp: new Date().toISOString(),
-      syncStatus: 'pending',
+      syncStatus: 'synced',
     };
 
     console.log('Saved Memory Recall Session:', newSession);
+    addGameSession(newSession);
 
     // Navigate to Game Results Screen
     navigation.navigate('GameResults', {

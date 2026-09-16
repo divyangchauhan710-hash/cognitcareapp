@@ -16,7 +16,6 @@ import {
   Bell,
   Check,
   ArrowLeft,
-  LucideIcon,
   Target,
 } from 'lucide-react-native';
 import { HeaderBar } from '../../components/HeaderBar';
@@ -30,12 +29,14 @@ import {
   DIFFICULTY_CONFIGS,
 } from '../../services/adaptiveEngine';
 import { GameSession } from '../../types';
+import { useAuth } from '../../context/AuthContext';
+import { useData } from '../../context/DataContext';
 
 interface ShapeItem {
   instanceId: string;
   type: string;
   name: string;
-  icon: LucideIcon;
+  icon: any;
   isTarget: boolean;
 }
 
@@ -51,6 +52,8 @@ const SHAPE_TYPES = [
 export const AttentionGameScreen: React.FC<{ navigation: any }> = ({
   navigation,
 }) => {
+  const { currentUser } = useAuth();
+  const { addGameSession } = useData();
   const [currentDifficulty, setCurrentDifficulty] = useState<number>(2);
   const [targetType, setTargetType] = useState(SHAPE_TYPES[0]);
   const [gridItems, setGridItems] = useState<ShapeItem[]>([]);
@@ -144,7 +147,7 @@ export const AttentionGameScreen: React.FC<{ navigation: any }> = ({
     // Save session
     const newSession: GameSession = {
       id: `gs-att-${Date.now()}`,
-      patientId: 'patient-rita-72',
+      patientId: currentUser?.id || 'unknown',
       gameType: 'attention',
       score,
       accuracy,
@@ -153,10 +156,11 @@ export const AttentionGameScreen: React.FC<{ navigation: any }> = ({
       totalQuestions: totalTargets,
       difficultyLevel: currentDifficulty,
       timestamp: new Date().toISOString(),
-      syncStatus: 'pending',
+      syncStatus: 'synced',
     };
 
     console.log('Saved Attention Game Session:', newSession);
+    addGameSession(newSession);
 
     // Navigate to Game Results Screen
     navigation.navigate('GameResults', {

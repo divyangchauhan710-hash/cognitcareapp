@@ -1,13 +1,12 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet, View, ViewStyle, TextStyle } from 'react-native';
-import { LucideIcon } from 'lucide-react-native';
 import { COLORS } from '../constants/colors';
 import { TYPOGRAPHY } from '../constants/typography';
 
 interface SecondaryButtonProps {
   title: string;
   onPress: () => void;
-  icon?: LucideIcon;
+  icon?: any;
   disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;

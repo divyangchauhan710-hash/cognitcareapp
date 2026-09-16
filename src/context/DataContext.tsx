@@ -1,15 +1,16 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { MemoryItem, ReminderItem, GameSession } from '../types';
-import {
-  INITIAL_MEMORIES,
-  INITIAL_REMINDERS,
-  INITIAL_GAME_SESSIONS,
-} from '../constants/demoData';
+
+const API_URL = "https://aeterna-1.onrender.com";
 
 interface DataContextType {
   memories: MemoryItem[];
   reminders: ReminderItem[];
   gameSessions: GameSession[];
+  analytics: any | null;
+  activePatientId: string | null;
+  setActivePatientId: (id: string | null) => void;
+  fetchPatientData: (patientId: string) => Promise<void>;
   addMemory: (item: Omit<MemoryItem, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>) => void;
   deleteMemory: (id: string) => void;
   addReminder: (item: Omit<ReminderItem, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>) => void;
@@ -21,34 +22,87 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [memories, setMemories] = useState<MemoryItem[]>(INITIAL_MEMORIES);
-  const [reminders, setReminders] = useState<ReminderItem[]>(INITIAL_REMINDERS);
-  const [gameSessions, setGameSessions] = useState<GameSession[]>(INITIAL_GAME_SESSIONS);
+  const [memories, setMemories] = useState<MemoryItem[]>([]);
+  const [reminders, setReminders] = useState<ReminderItem[]>([]);
+  const [gameSessions, setGameSessions] = useState<GameSession[]>([]);
+  const [analytics, setAnalytics] = useState<any | null>(null);
+  const [activePatientId, setActivePatientId] = useState<string | null>(null);
 
-  const addMemory = (item: Omit<MemoryItem, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>) => {
+  const fetchPatientData = async (patientId: string) => {
+    try {
+      // Fetch Game Sessions
+      const resGS = await fetch(`${API_URL}/api/game-sessions?patient_id=${patientId}`);
+      if (resGS.ok) setGameSessions(await resGS.json());
+
+      // Fetch Memories
+      const resMem = await fetch(`${API_URL}/api/memories?patient_id=${patientId}`);
+      if (resMem.ok) setMemories(await resMem.json());
+
+      // Fetch Reminders
+      const resRem = await fetch(`${API_URL}/api/reminders?patient_id=${patientId}`);
+      if (resRem.ok) setReminders(await resRem.json());
+
+      // Fetch Analytics
+      const resAna = await fetch(`${API_URL}/api/analytics/${patientId}`);
+      if (resAna.ok) setAnalytics(await resAna.json());
+    } catch (e) {
+      console.error("Error fetching patient data:", e);
+    }
+  };
+
+  const addMemory = async (item: Omit<MemoryItem, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>) => {
+    if (!activePatientId) return;
     const newMemory: MemoryItem = {
       ...item,
       id: `mem-${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      syncStatus: 'pending',
+      syncStatus: 'synced',
     };
+    
+    // Optimistic update
     setMemories((prev) => [newMemory, ...prev]);
+
+    try {
+      await fetch(`${API_URL}/api/memories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMemory)
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const deleteMemory = (id: string) => {
+  const deleteMemory = async (id: string) => {
     setMemories((prev) => prev.filter((m) => m.id !== id));
+    try {
+      await fetch(`${API_URL}/api/memories/${id}`, { method: 'DELETE' });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const addReminder = (item: Omit<ReminderItem, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>) => {
+  const addReminder = async (item: Omit<ReminderItem, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>) => {
+    if (!activePatientId) return;
     const newReminder: ReminderItem = {
       ...item,
       id: `rem-${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      syncStatus: 'pending',
+      syncStatus: 'synced',
     };
     setReminders((prev) => [newReminder, ...prev]);
+
+    try {
+      await fetch(`${API_URL}/api/reminders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newReminder)
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const updateReminderStatus = (
@@ -58,23 +112,30 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setReminders((prev) =>
       prev.map((r) =>
         r.id === id
-          ? {
-              ...r,
-              status,
-              updatedAt: new Date().toISOString(),
-              syncStatus: 'pending',
-            }
+          ? { ...r, status, updatedAt: new Date().toISOString() }
           : r
       )
     );
+    // You could add a PATCH endpoint for reminders, but for now we'll just optimistically update locally
   };
 
   const deleteReminder = (id: string) => {
     setReminders((prev) => prev.filter((r) => r.id !== id));
   };
 
-  const addGameSession = (session: GameSession) => {
+  const addGameSession = async (session: GameSession) => {
     setGameSessions((prev) => [session, ...prev]);
+    try {
+      await fetch(`${API_URL}/api/game-sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(session)
+      });
+      // Refresh analytics after game
+      if (activePatientId) fetchPatientData(activePatientId);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
@@ -83,6 +144,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         memories,
         reminders,
         gameSessions,
+        analytics,
+        activePatientId,
+        setActivePatientId,
+        fetchPatientData,
         addMemory,
         deleteMemory,
         addReminder,

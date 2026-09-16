@@ -18,15 +18,31 @@ import { SectionHeader } from '../../components/SectionHeader';
 import { COLORS } from '../../constants/colors';
 import { TYPOGRAPHY } from '../../constants/typography';
 import { useData } from '../../context/DataContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface PatientHomeScreenProps {
   navigation: any;
 }
 
 export const PatientHomeScreen: React.FC<PatientHomeScreenProps> = ({ navigation }) => {
-  const { reminders, updateReminderStatus } = useData();
+  const { currentUser } = useAuth();
+  const { reminders, updateReminderStatus, gameSessions, analytics, fetchPatientData, setActivePatientId } = useData();
+
+  React.useEffect(() => {
+    if (currentUser) {
+      setActivePatientId(currentUser.id);
+      fetchPatientData(currentUser.id);
+    }
+  }, [currentUser]);
 
   const upcomingReminder = reminders.find((r) => r.status === 'pending') || reminders[0];
+
+  const gamesDone = gameSessions.filter(s => {
+    const today = new Date().toDateString();
+    return new Date(s.timestamp).toDateString() === today;
+  }).length;
+  
+  const durationMin = Math.round((analytics?.averageResponseTimeMs || 0) * (analytics?.totalSessions || 0) / 60000);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -34,7 +50,7 @@ export const PatientHomeScreen: React.FC<PatientHomeScreenProps> = ({ navigation
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Welcome Header */}
         <View style={styles.greetingHeader}>
-          <Text style={styles.greetingTitle}>Good Morning, Rita</Text>
+          <Text style={styles.greetingTitle}>Good Morning, {currentUser?.email?.split('@')[0]}</Text>
           <Text style={styles.greetingSubtitle}>Let's complete today's activities.</Text>
         </View>
 
@@ -56,13 +72,13 @@ export const PatientHomeScreen: React.FC<PatientHomeScreenProps> = ({ navigation
         <View style={styles.statsRow}>
           <StatCard
             label="Games Completed"
-            value="2"
+            value={gamesDone.toString()}
             icon={CheckCircle}
             variant="primary"
           />
           <StatCard
             label="Session Time"
-            value="14"
+            value={durationMin.toString()}
             unit="min"
             icon={Clock}
             variant="teal"

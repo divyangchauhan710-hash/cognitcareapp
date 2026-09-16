@@ -1,6 +1,6 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Modal, FlatList } from 'react-native';
 import {
   Users,
   Brain,
@@ -11,43 +11,147 @@ import {
   Clock,
   ChevronRight,
   Activity,
+  ChevronDown
 } from 'lucide-react-native';
 import { HeaderBar } from '../../components/HeaderBar';
 import { StatCard } from '../../components/StatCard';
 import { SectionHeader } from '../../components/SectionHeader';
 import { COLORS } from '../../constants/colors';
 import { TYPOGRAPHY } from '../../constants/typography';
-import { INITIAL_PERFORMANCE, DEMO_PATIENT } from '../../constants/demoData';
 import { useData } from '../../context/DataContext';
+import { useAuth } from '../../context/AuthContext';
+
+const API_URL = "https://aeterna-1.onrender.com";
 
 interface CaregiverDashboardScreenProps {
   navigation: any;
 }
 
 export const CaregiverDashboardScreen: React.FC<CaregiverDashboardScreenProps> = ({ navigation }) => {
-  const { reminders, memories } = useData();
+  const { currentUser } = useAuth();
+  const { reminders, memories, gameSessions, analytics, activePatientId, setActivePatientId, fetchPatientData } = useData();
+  const [myPatients, setMyPatients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+
+  useEffect(() => {
+    fetchConnectedPatients();
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (activePatientId) {
+      fetchPatientData(activePatientId);
+    }
+  }, [activePatientId]);
+
+  const fetchConnectedPatients = async () => {
+    if (!currentUser) return;
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}/connections/my-patients/${currentUser.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMyPatients(data);
+        if (data.length > 0 && !activePatientId) {
+          setActivePatientId(data[0].id);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectedPatient = myPatients.find(p => p.id === activePatientId) || null;
+
+  if (loading && myPatients.length === 0) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <HeaderBar />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (myPatients.length === 0) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <HeaderBar />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <Text style={styles.alertTitle}>No Patients Connected</Text>
+          <Text style={{ textAlign: 'center', marginTop: 10 }}>Go to the Connections screen to send a request to a patient.</Text>
+          <Pressable style={{ marginTop: 20, padding: 10, backgroundColor: COLORS.primary, borderRadius: 8 }} onPress={() => navigation.navigate('Connections')}>
+            <Text style={{ color: 'white', fontWeight: 'bold' }}>Manage Connections</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const completedReminders = reminders.filter((r) => r.status === 'completed').length;
   const missedReminders = reminders.filter((r) => r.status === 'missed').length;
+
+  const avgAccuracy = analytics?.averageAccuracy || 0;
+  const recentTrend = analytics?.recentTrend || "stable";
+  const gamesDone = gameSessions.filter(s => {
+    const today = new Date().toDateString();
+    return new Date(s.timestamp).toDateString() === today;
+  }).length;
+  const durationMin = Math.round((analytics?.averageResponseTimeMs || 0) * (analytics?.totalSessions || 0) / 60000);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <HeaderBar />
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        
+        {/* Patient Selection Dropdown Trigger */}
+        <Pressable style={styles.patientSelector} onPress={() => setDropdownVisible(true)}>
+          <Text style={styles.patientSelectorText}>Viewing: {selectedPatient?.email || "Unknown Patient"}</Text>
+          <ChevronDown size={20} color={COLORS.textPrimary} />
+        </Pressable>
+
+        {/* Dropdown Modal */}
+        <Modal visible={dropdownVisible} transparent animationType="fade">
+          <Pressable style={styles.modalOverlay} onPress={() => setDropdownVisible(false)}>
+            <View style={styles.dropdownContent}>
+              <Text style={styles.dropdownTitle}>Select Patient</Text>
+              <FlatList
+                data={myPatients}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <Pressable 
+                    style={[styles.dropdownItem, item.id === activePatientId && styles.dropdownItemSelected]} 
+                    onPress={() => {
+                      setActivePatientId(item.id);
+                      setDropdownVisible(false);
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>{item.email}</Text>
+                    {item.id === activePatientId && <CheckCircle size={20} color={COLORS.primary} />}
+                  </Pressable>
+                )}
+              />
+            </View>
+          </Pressable>
+        </Modal>
+
         {/* Caregiver Header Card */}
         <View style={styles.caregiverHeaderCard}>
           <View style={styles.patientAvatarBadge}>
             <Users size={28} color={COLORS.caregiverPrimary} />
           </View>
           <View style={styles.patientHeaderInfo}>
-            <Text style={styles.patientName}>{DEMO_PATIENT.name}</Text>
+            <Text style={styles.patientName}>{selectedPatient?.email}</Text>
             <Text style={styles.patientMeta}>
-              Age: {DEMO_PATIENT.age} • Status: Active Training
+              ID: {selectedPatient?.id.substring(0, 8)} • Status: Active Training
             </Text>
           </View>
-          <View style={styles.trendBadge}>
-            <TrendingUp size={16} color={COLORS.success} />
-            <Text style={styles.trendBadgeText}>Improving</Text>
+          <View style={[styles.trendBadge, recentTrend === 'stable' && {backgroundColor: COLORS.infoBg, borderColor: COLORS.infoBorder}]}>
+            <TrendingUp size={16} color={recentTrend === 'improving' ? COLORS.success : COLORS.primary} />
+            <Text style={[styles.trendBadgeText, recentTrend === 'stable' && {color: COLORS.primary}]}>{recentTrend}</Text>
           </View>
         </View>
 
@@ -57,7 +161,7 @@ export const CaregiverDashboardScreen: React.FC<CaregiverDashboardScreenProps> =
           <View style={styles.alertTextContainer}>
             <Text style={styles.alertTitle}>Activity Summary</Text>
             <Text style={styles.alertBody}>
-              Rita completed 2 cognitive sessions today. {completedReminders} of {reminders.length} reminders completed.
+              Patient completed {gamesDone} cognitive sessions today. {completedReminders} of {reminders.length} reminders completed.
             </Text>
           </View>
         </View>
@@ -70,14 +174,14 @@ export const CaregiverDashboardScreen: React.FC<CaregiverDashboardScreenProps> =
         <View style={styles.statsGrid}>
           <View style={styles.statsRow}>
             <StatCard
-              label="Games Done"
-              value="2"
+              label="Games Done Today"
+              value={gamesDone.toString()}
               icon={CheckCircle}
               variant="caregiver"
             />
             <StatCard
-              label="Duration"
-              value="14"
+              label="Total Duration"
+              value={durationMin.toString()}
               unit="min"
               icon={Clock}
               variant="neutral"
@@ -86,7 +190,7 @@ export const CaregiverDashboardScreen: React.FC<CaregiverDashboardScreenProps> =
           <View style={styles.statsRow}>
             <StatCard
               label="Avg Accuracy"
-              value="82"
+              value={avgAccuracy.toString()}
               unit="%"
               icon={Activity}
               variant="teal"
@@ -98,80 +202,6 @@ export const CaregiverDashboardScreen: React.FC<CaregiverDashboardScreenProps> =
               variant="primary"
             />
           </View>
-        </View>
-
-        {/* Cognitive Task Performance Profile */}
-        <SectionHeader
-          title="Cognitive Performance"
-          subtitle="Task-level training metrics (non-diagnostic)"
-        />
-        <View style={styles.performanceCard}>
-          <View style={styles.perfRow}>
-            <View style={styles.perfLabelContainer}>
-              <Brain size={20} color={COLORS.primary} />
-              <Text style={styles.perfLabel}>Memory Task Performance</Text>
-            </View>
-            <Text style={styles.perfValue}>
-              {INITIAL_PERFORMANCE.memoryTaskPerformance}%
-            </Text>
-          </View>
-          <View style={styles.progressBarBg}>
-            <View
-              style={[
-                styles.progressBarFill,
-                {
-                  width: `${INITIAL_PERFORMANCE.memoryTaskPerformance}%`,
-                  backgroundColor: COLORS.primary,
-                },
-              ]}
-            />
-          </View>
-
-          <View style={[styles.perfRow, { marginTop: 16 }]}>
-            <View style={styles.perfLabelContainer}>
-              <Activity size={20} color={COLORS.primaryTeal} />
-              <Text style={styles.perfLabel}>Attention Task Performance</Text>
-            </View>
-            <Text style={styles.perfValue}>
-              {INITIAL_PERFORMANCE.attentionTaskPerformance}%
-            </Text>
-          </View>
-          <View style={styles.progressBarBg}>
-            <View
-              style={[
-                styles.progressBarFill,
-                {
-                  width: `${INITIAL_PERFORMANCE.attentionTaskPerformance}%`,
-                  backgroundColor: COLORS.primaryTeal,
-                },
-              ]}
-            />
-          </View>
-
-          <View style={[styles.perfRow, { marginTop: 16 }]}>
-            <View style={styles.perfLabelContainer}>
-              <Users size={20} color={COLORS.caregiverPrimary} />
-              <Text style={styles.perfLabel}>Recognition Performance</Text>
-            </View>
-            <Text style={styles.perfValue}>
-              {INITIAL_PERFORMANCE.recognitionPerformance}%
-            </Text>
-          </View>
-          <View style={styles.progressBarBg}>
-            <View
-              style={[
-                styles.progressBarFill,
-                {
-                  width: `${INITIAL_PERFORMANCE.recognitionPerformance}%`,
-                  backgroundColor: COLORS.caregiverPrimary,
-                },
-              ]}
-            />
-          </View>
-
-          <Text style={styles.disclaimerNote}>
-            Note: Cognitive metrics describe task training performance only and do not provide medical diagnosis.
-          </Text>
         </View>
 
         {/* Caregiver Actions Navigation */}
@@ -235,6 +265,54 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     paddingBottom: 32,
+  },
+  patientSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.cardBg,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+    marginBottom: 16,
+  },
+  patientSelectorText: {
+    ...TYPOGRAPHY.titleSmall,
+    color: COLORS.textPrimary,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownContent: {
+    backgroundColor: COLORS.cardBg,
+    borderRadius: 16,
+    padding: 20,
+    width: '80%',
+    maxHeight: '60%',
+  },
+  dropdownTitle: {
+    ...TYPOGRAPHY.titleMedium,
+    color: COLORS.textPrimary,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.cardBorder,
+  },
+  dropdownItemSelected: {
+    backgroundColor: COLORS.infoBg,
+  },
+  dropdownItemText: {
+    ...TYPOGRAPHY.bodyLarge,
+    color: COLORS.textPrimary,
   },
   caregiverHeaderCard: {
     flexDirection: 'row',
@@ -311,48 +389,6 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
-  },
-  performanceCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-  },
-  perfRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  perfLabelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  perfLabel: {
-    ...TYPOGRAPHY.bodyBold,
-    color: COLORS.textPrimary,
-  },
-  perfValue: {
-    ...TYPOGRAPHY.titleSmall,
-    color: COLORS.textPrimary,
-  },
-  progressBarBg: {
-    height: 12,
-    backgroundColor: COLORS.background,
-    borderRadius: 6,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 6,
-  },
-  disclaimerNote: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.textMuted,
-    marginTop: 16,
-    fontStyle: 'italic',
   },
   actionLinkCard: {
     flexDirection: 'row',

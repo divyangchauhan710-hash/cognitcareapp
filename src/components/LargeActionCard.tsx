@@ -1,13 +1,13 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet, View, ViewStyle } from 'react-native';
-import { LucideIcon, ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { COLORS } from '../constants/colors';
 import { TYPOGRAPHY } from '../constants/typography';
 
 interface LargeActionCardProps {
   title: string;
   subtitle?: string;
-  icon: LucideIcon;
+  icon: any;
   onPress: () => void;
   variant?: 'hero' | 'standard' | 'teal' | 'caregiver';
   badgeText?: string;
