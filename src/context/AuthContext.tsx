@@ -12,6 +12,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
+  updateUser: (updates: any) => Promise<void>;
   logout: () => void;
 }
 
@@ -85,6 +86,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setRole(user.role as UserRole);
   };
 
+  const updateUser = async (updates: any) => {
+    if (!currentUser) return;
+    const updatedUser = { ...currentUser, ...updates };
+    setCurrentUser(updatedUser);
+    await SecureStore.setItemAsync('userObj', JSON.stringify(updatedUser));
+    // In a real app, you would also make an API call to update the backend here
+    // e.g., await fetch(`${API_URL}/users/${currentUser.id}`, { method: 'PATCH', body: JSON.stringify(updates) });
+  };
+
   const logout = async () => {
     await SecureStore.deleteItemAsync('userToken');
     await SecureStore.deleteItemAsync('userObj');
@@ -102,6 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         register,
+        updateUser,
         logout,
       }}
     >

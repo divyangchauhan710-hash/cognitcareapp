@@ -12,7 +12,7 @@ import { TYPOGRAPHY } from '../../constants/typography';
 import { useData } from '../../context/DataContext';
 
 export const CaregiverRemindersScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { reminders, addReminder } = useData();
+  const { reminders, addReminder, activePatientId } = useData();
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [title, setTitle] = useState('');
@@ -22,7 +22,7 @@ export const CaregiverRemindersScreen: React.FC<{ navigation: any }> = ({ naviga
   const handleAddReminder = () => {
     if (!title.trim() || !scheduledTime.trim()) return;
     addReminder({
-      patientId: 'patient-rita-72',
+      patientId: activePatientId || '',
       title,
       scheduledTime,
       description: description || 'Daily scheduled reminder.',
@@ -49,7 +49,7 @@ export const CaregiverRemindersScreen: React.FC<{ navigation: any }> = ({ naviga
 
         <SectionHeader
           title="Reminder Management"
-          subtitle="Schedule medication and daily reminders for Rita Devi"
+          subtitle="Schedule medication and daily reminders for your patient"
           action={
             <PrimaryButton
               title={showAddForm ? 'Cancel' : 'New Reminder'}

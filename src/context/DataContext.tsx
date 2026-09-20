@@ -54,6 +54,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!activePatientId) return;
     const newMemory: MemoryItem = {
       ...item,
+      patientId: activePatientId,
       id: `mem-${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -87,6 +88,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!activePatientId) return;
     const newReminder: ReminderItem = {
       ...item,
+      patientId: activePatientId,
       id: `rem-${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

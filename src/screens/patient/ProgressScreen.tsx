@@ -8,9 +8,20 @@ import { SectionHeader } from '../../components/SectionHeader';
 import { SecondaryButton } from '../../components/SecondaryButton';
 import { COLORS } from '../../constants/colors';
 import { TYPOGRAPHY } from '../../constants/typography';
-import { INITIAL_PERFORMANCE } from '../../constants/demoData';
+import { useData } from '../../context/DataContext';
 
 export const ProgressScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { gameSessions, analytics } = useData();
+  
+  const totalSessionsCompleted = gameSessions.length;
+  const totalDurationMinutes = Math.round(
+    gameSessions.reduce((acc, curr) => acc + (curr.responseTimeMs || 0), 0) / 60000
+  );
+
+  const memoryTaskPerformance = analytics?.memoryTaskPerformance || 0;
+  const attentionTaskPerformance = analytics?.attentionTaskPerformance || 0;
+  const recallPerformance = analytics?.recallPerformance || 0;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <HeaderBar />
@@ -30,13 +41,13 @@ export const ProgressScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         <View style={styles.statsRow}>
           <StatCard
             label="Total Sessions"
-            value={INITIAL_PERFORMANCE.totalSessionsCompleted}
+            value={totalSessionsCompleted.toString()}
             icon={CheckCircle}
             variant="primary"
           />
           <StatCard
             label="Total Duration"
-            value={INITIAL_PERFORMANCE.totalDurationMinutes}
+            value={totalDurationMinutes.toString()}
             unit="min"
             icon={Clock}
             variant="teal"
@@ -49,19 +60,19 @@ export const ProgressScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
           <View style={styles.metricRow}>
             <Brain size={24} color={COLORS.primary} />
             <Text style={styles.metricLabel}>Memory Task Performance</Text>
-            <Text style={styles.metricVal}>{INITIAL_PERFORMANCE.memoryTaskPerformance}%</Text>
+            <Text style={styles.metricVal}>{memoryTaskPerformance}%</Text>
           </View>
 
           <View style={[styles.metricRow, { marginTop: 16 }]}>
             <Activity size={24} color={COLORS.primaryTeal} />
             <Text style={styles.metricLabel}>Attention Task Performance</Text>
-            <Text style={styles.metricVal}>{INITIAL_PERFORMANCE.attentionTaskPerformance}%</Text>
+            <Text style={styles.metricVal}>{attentionTaskPerformance}%</Text>
           </View>
 
           <View style={[styles.metricRow, { marginTop: 16 }]}>
             <TrendingUp size={24} color={COLORS.success} />
             <Text style={styles.metricLabel}>Recall Task Performance</Text>
-            <Text style={styles.metricVal}>{INITIAL_PERFORMANCE.recallPerformance}%</Text>
+            <Text style={styles.metricVal}>{recallPerformance}%</Text>
           </View>
         </View>
       </ScrollView>

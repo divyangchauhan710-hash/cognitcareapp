@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
-import { User, Users, ShieldAlert } from 'lucide-react-native';
+import { User, Users } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { OfflineBadge } from './OfflineBadge';
 import { COLORS } from '../constants/colors';
@@ -16,11 +16,6 @@ interface HeaderBarProps {
 export const HeaderBar: React.FC<HeaderBarProps> = ({ title, showBackButton, onBackPress }) => {
   const { currentUser, role } = useAuth();
   const navigation = useNavigation();
-
-  const handleRoleToggle = () => {
-    // We are no longer using this for demo toggle. 
-    // It could be used by a caregiver to view patient portal if we want, but for now we leave it intact or remove it.
-  };
 
   return (
     <View style={styles.header}>
@@ -54,28 +49,6 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ title, showBackButton, onB
 
       <View style={styles.rightContainer}>
         <OfflineBadge />
-        <Pressable
-          onPress={handleRoleToggle}
-          style={({ pressed }) => [
-            styles.roleSwitchBtn,
-            role === 'caregiver' ? styles.caregiverBtn : styles.patientBtn,
-            pressed && styles.pressed,
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={`Switch role to ${
-            role === 'patient' ? 'Caregiver' : 'Patient'
-          }`}
-        >
-          <ShieldAlert size={16} color={role === 'caregiver' ? COLORS.primary : COLORS.caregiverPrimary} />
-          <Text
-            style={[
-              styles.roleSwitchText,
-              { color: role === 'caregiver' ? COLORS.primary : COLORS.caregiverPrimary },
-            ]}
-          >
-            {role === 'patient' ? 'Caregiver' : 'Patient'}
-          </Text>
-        </Pressable>
       </View>
     </View>
   );
@@ -122,27 +95,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  roleSwitchBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    borderWidth: 1.5,
-  },
-  patientBtn: {
-    borderColor: COLORS.caregiverPrimary,
-    backgroundColor: COLORS.caregiverLight,
-  },
-  caregiverBtn: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.infoBg,
-  },
-  roleSwitchText: {
-    fontSize: 13,
-    fontWeight: '700',
   },
   pressed: {
     opacity: 0.8,

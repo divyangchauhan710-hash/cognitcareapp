@@ -11,7 +11,7 @@ import { TYPOGRAPHY } from '../../constants/typography';
 import { useData } from '../../context/DataContext';
 
 export const CaregiverMemoryBankScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { memories, addMemory, deleteMemory } = useData();
+  const { memories, addMemory, deleteMemory, activePatientId } = useData();
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [name, setName] = useState('');
@@ -21,10 +21,10 @@ export const CaregiverMemoryBankScreen: React.FC<{ navigation: any }> = ({ navig
   const handleAddMemory = () => {
     if (!name.trim() || !relationship.trim()) return;
     addMemory({
-      patientId: 'patient-rita-72',
+      patientId: activePatientId || '',
       name,
       relationship,
-      description: description || `${name} is Rita's ${relationship}.`,
+      description: description || `${name} is their ${relationship}.`,
       category: 'family',
     });
     setName('');
@@ -46,7 +46,7 @@ export const CaregiverMemoryBankScreen: React.FC<{ navigation: any }> = ({ navig
 
         <SectionHeader
           title="Caregiver Memory Bank Management"
-          subtitle="Add and manage personalized memories for Rita Devi"
+          subtitle="Add and manage personalized memories for your patient"
           action={
             <PrimaryButton
               title={showAddForm ? 'Cancel' : 'Add Memory'}

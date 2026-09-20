@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SyncManager } from '../services/syncService';
+import NetInfo from '@react-native-community/netinfo';
 
 interface SyncContextType {
   isOnline: boolean;
@@ -23,6 +24,17 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setPendingSyncCount(0);
     }
   };
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      const isConnected = !!state.isConnected;
+      setIsOnline(isConnected);
+      if (isConnected) {
+        triggerSync();
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const toggleNetwork = async () => {
     const nextState = !isOnline;

@@ -8,10 +8,10 @@ import { SecondaryButton } from '../../components/SecondaryButton';
 import { COLORS } from '../../constants/colors';
 import { TYPOGRAPHY } from '../../constants/typography';
 import * as ImagePicker from 'expo-image-picker';
-import { User, Users, Camera, LogOut } from 'lucide-react-native';
+import { User, Users, Camera, LogOut, Home } from 'lucide-react-native';
 
 export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { currentUser, role, logout } = useAuth();
+  const { currentUser, role, logout, updateUser } = useAuth();
   const [profileImage, setProfileImage] = useState<string | null>(currentUser?.pfp_url || null);
   const [emergencyContact, setEmergencyContact] = useState(currentUser?.emergency_contact || '');
 
@@ -32,8 +32,15 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
   };
 
   const handleSave = async () => {
-    // TODO: Send profileImage and emergencyContact to backend
-    Alert.alert("Success", "Profile updated successfully");
+    try {
+      await updateUser({
+        pfp_url: profileImage,
+        emergency_contact: emergencyContact,
+      });
+      Alert.alert("Success", "Profile updated successfully");
+    } catch (e) {
+      Alert.alert("Error", "Failed to update profile");
+    }
   };
 
   const handleLogout = () => {
@@ -79,6 +86,12 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
         </View>
 
         <View style={styles.section}>
+          <SecondaryButton 
+            title="Back to Home" 
+            onPress={() => navigation.navigate(role === 'caregiver' ? 'CaregiverDashboard' : 'PatientHome')} 
+            icon={Home}
+            style={{ marginBottom: 16 }}
+          />
           <SecondaryButton 
             title="Manage Connections" 
             onPress={() => navigation.navigate('Connections')} 
