@@ -88,11 +88,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateUser = async (updates: any) => {
     if (!currentUser) return;
-    const updatedUser = { ...currentUser, ...updates };
-    setCurrentUser(updatedUser);
-    await SecureStore.setItemAsync('userObj', JSON.stringify(updatedUser));
-    // In a real app, you would also make an API call to update the backend here
-    // e.g., await fetch(`${API_URL}/users/${currentUser.id}`, { method: 'PATCH', body: JSON.stringify(updates) });
+    try {
+      const response = await fetch(`${API_URL}/auth/user/${currentUser.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update user profile");
+      }
+      const updatedUser = await response.json();
+      setCurrentUser(updatedUser);
+      await SecureStore.setItemAsync('userObj', JSON.stringify(updatedUser));
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   };
 
   const logout = async () => {

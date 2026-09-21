@@ -106,3 +106,18 @@ def google_login(google_data: schemas.GoogleLogin, db: Session = Depends(get_db)
         return {"access_token": access_token, "token_type": "bearer", "user": db_user}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.patch("/user/{user_id}", response_model=schemas.UserResponse)
+def update_user(user_id: str, updates: schemas.UserUpdate, db: Session = Depends(get_db)):
+    db_user = db.query(models.UserModel).filter(models.UserModel.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if updates.pfp_url is not None:
+        db_user.pfp_url = updates.pfp_url
+    if updates.emergency_number is not None:
+        db_user.emergency_number = updates.emergency_number
+        
+    db.commit()
+    db.refresh(db_user)
+    return db_user

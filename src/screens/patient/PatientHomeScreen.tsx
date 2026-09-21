@@ -44,13 +44,21 @@ export const PatientHomeScreen: React.FC<PatientHomeScreenProps> = ({ navigation
   
   const durationMin = Math.round((analytics?.averageResponseTimeMs || 0) * (analytics?.totalSessions || 0) / 60000);
 
+  const hour = new Date().getHours();
+  let greeting = 'Good Evening';
+  if (hour < 12) {
+    greeting = 'Good Morning';
+  } else if (hour < 18) {
+    greeting = 'Good Afternoon';
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <HeaderBar />
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Welcome Header */}
         <View style={styles.greetingHeader}>
-          <Text style={styles.greetingTitle}>Good Morning, {currentUser?.email?.split('@')[0]}</Text>
+          <Text style={styles.greetingTitle}>{greeting}, {currentUser?.name || currentUser?.email?.split('@')[0]}</Text>
           <Text style={styles.greetingSubtitle}>Let's complete today's activities.</Text>
         </View>
 

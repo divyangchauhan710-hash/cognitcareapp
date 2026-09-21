@@ -10,6 +10,10 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+class UserUpdate(BaseModel):
+    pfp_url: Optional[str] = None
+    emergency_number: Optional[str] = None
+
 class GoogleLogin(BaseModel):
     id_token: str
     role: str

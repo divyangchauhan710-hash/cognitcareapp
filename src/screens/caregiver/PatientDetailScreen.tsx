@@ -7,9 +7,11 @@ import { SectionHeader } from '../../components/SectionHeader';
 import { SecondaryButton } from '../../components/SecondaryButton';
 import { COLORS } from '../../constants/colors';
 import { TYPOGRAPHY } from '../../constants/typography';
-import { DEMO_PATIENT, INITIAL_PERFORMANCE, INITIAL_GAME_SESSIONS } from '../../constants/demoData';
+import { useData } from '../../context/DataContext';
 
 export const PatientDetailScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { gameSessions } = useData();
+  
   return (
     <SafeAreaView style={styles.safeArea}>
       <HeaderBar />
@@ -22,13 +24,13 @@ export const PatientDetailScreen: React.FC<{ navigation: any }> = ({ navigation 
         />
 
         <SectionHeader
-          title={`Patient Details — ${DEMO_PATIENT.name}`}
+          title={`Patient Details`}
           subtitle="Comprehensive activity history and task performance"
         />
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Recent Game Sessions</Text>
-          {INITIAL_GAME_SESSIONS.map((session) => (
+          {gameSessions.map((session) => (
             <View key={session.id} style={styles.sessionItem}>
               <View style={styles.sessionIconBadge}>
                 <Brain size={20} color={COLORS.primary} />
