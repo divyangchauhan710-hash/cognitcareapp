@@ -29,6 +29,34 @@ export const PatientDetailScreen: React.FC<{ navigation: any }> = ({ navigation 
         />
 
         <View style={styles.card}>
+          <Text style={styles.cardTitle}>Performance Overview</Text>
+          <View style={styles.graphContainer}>
+            {['memory_recall', 'pattern_sequence', 'category_sorting', 'math_puzzles'].map((type) => {
+              const sessions = gameSessions.filter(s => s.gameType === type);
+              const avg = sessions.length > 0 
+                ? Math.round(sessions.reduce((a, b) => a + b.score, 0) / sessions.length) 
+                : 0;
+              
+              let label = 'Mem';
+              let color = COLORS.primary;
+              if (type === 'pattern_sequence') { label = 'Pat'; color = COLORS.primaryTeal; }
+              if (type === 'category_sorting') { label = 'Cat'; color = COLORS.info; }
+              if (type === 'math_puzzles') { label = 'Math'; color = COLORS.success; }
+
+              return (
+                <View key={type} style={styles.barWrapper}>
+                  <Text style={styles.barLabel}>{avg}%</Text>
+                  <View style={styles.barTrack}>
+                    <View style={[styles.barFill, { height: `${avg}%`, backgroundColor: color }]} />
+                  </View>
+                  <Text style={styles.barLabel}>{label}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={[styles.card, { marginTop: 16 }]}>
           <Text style={styles.cardTitle}>Recent Game Sessions</Text>
           {gameSessions.map((session) => (
             <View key={session.id} style={styles.sessionItem}>
@@ -37,10 +65,13 @@ export const PatientDetailScreen: React.FC<{ navigation: any }> = ({ navigation 
               </View>
               <View style={styles.sessionMeta}>
                 <Text style={styles.sessionType}>
-                  {session.gameType === 'memory_recall' ? 'Memory Recall' : 'Attention Task'}
+                  {session.gameType === 'memory_recall' ? 'Memory Recall' :
+                   session.gameType === 'pattern_sequence' ? 'Pattern Sequence' :
+                   session.gameType === 'category_sorting' ? 'Category Sorting' :
+                   'Math Puzzles'}
                 </Text>
                 <Text style={styles.sessionSub}>
-                  Difficulty Level {session.difficultyLevel} • Response Time: {session.responseTimeMs / 1000}s
+                  Difficulty Level {session.difficultyLevel} • Response Time: {(session.responseTimeMs / 1000).toFixed(1)}s
                 </Text>
               </View>
               <View style={styles.scoreBadge}>
@@ -73,6 +104,36 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.titleSmall,
     color: COLORS.textPrimary,
     marginBottom: 12,
+  },
+  graphContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    height: 160,
+    marginTop: 8,
+    paddingHorizontal: 8,
+  },
+  barWrapper: {
+    alignItems: 'center',
+    width: 40,
+  },
+  barTrack: {
+    width: 24,
+    height: 100,
+    backgroundColor: COLORS.cardBorder,
+    borderRadius: 12,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+    marginVertical: 8,
+  },
+  barFill: {
+    width: '100%',
+    borderRadius: 12,
+  },
+  barLabel: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.textSecondary,
+    fontSize: 11,
   },
   sessionItem: {
     flexDirection: 'row',

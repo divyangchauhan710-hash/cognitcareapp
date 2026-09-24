@@ -1,7 +1,7 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { TrendingUp, ArrowLeft, Brain, Activity, CheckCircle, Clock } from 'lucide-react-native';
+import { TrendingUp, ArrowLeft, Brain, Activity, CheckCircle, Clock, Layers, Calculator } from 'lucide-react-native';
 import { HeaderBar } from '../../components/HeaderBar';
 import { StatCard } from '../../components/StatCard';
 import { SectionHeader } from '../../components/SectionHeader';
@@ -18,9 +18,17 @@ export const ProgressScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
     gameSessions.reduce((acc, curr) => acc + (curr.responseTimeMs || 0), 0) / 60000
   );
 
-  const memoryTaskPerformance = analytics?.memoryTaskPerformance || 0;
-  const attentionTaskPerformance = analytics?.attentionTaskPerformance || 0;
-  const recallPerformance = analytics?.recallPerformance || 0;
+  const calculateAverageForGame = (gameType: string) => {
+    const sessions = gameSessions.filter(s => s.gameType === gameType);
+    if (sessions.length === 0) return 0;
+    const totalScore = sessions.reduce((acc, curr) => acc + (curr.score || 0), 0);
+    return Math.round(totalScore / sessions.length);
+  };
+
+  const memoryTaskPerformance = calculateAverageForGame('memory_recall');
+  const patternTaskPerformance = calculateAverageForGame('pattern_sequence');
+  const categoryTaskPerformance = calculateAverageForGame('category_sorting');
+  const mathTaskPerformance = calculateAverageForGame('math_puzzles');
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -65,14 +73,20 @@ export const ProgressScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
           <View style={[styles.metricRow, { marginTop: 16 }]}>
             <Activity size={24} color={COLORS.primaryTeal} />
-            <Text style={styles.metricLabel}>Attention Task Performance</Text>
-            <Text style={styles.metricVal}>{attentionTaskPerformance}%</Text>
+            <Text style={styles.metricLabel}>Pattern Sequence Performance</Text>
+            <Text style={styles.metricVal}>{patternTaskPerformance}%</Text>
           </View>
 
           <View style={[styles.metricRow, { marginTop: 16 }]}>
-            <TrendingUp size={24} color={COLORS.success} />
-            <Text style={styles.metricLabel}>Recall Task Performance</Text>
-            <Text style={styles.metricVal}>{recallPerformance}%</Text>
+            <Layers size={24} color={COLORS.info} />
+            <Text style={styles.metricLabel}>Category Sorting Performance</Text>
+            <Text style={styles.metricVal}>{categoryTaskPerformance}%</Text>
+          </View>
+
+          <View style={[styles.metricRow, { marginTop: 16 }]}>
+            <Calculator size={24} color={COLORS.success} />
+            <Text style={styles.metricLabel}>Math Puzzles Performance</Text>
+            <Text style={styles.metricVal}>{mathTaskPerformance}%</Text>
           </View>
         </View>
       </ScrollView>

@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
-import { User, Users } from 'lucide-react-native';
+import { User, Users, Volume2, VolumeX } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { OfflineBadge } from './OfflineBadge';
 import { COLORS } from '../constants/colors';
 import { TYPOGRAPHY } from '../constants/typography';
 import { useNavigation } from '@react-navigation/native';
+import { VoiceService } from '../services/voiceService';
 
 interface HeaderBarProps {
   title?: string;
@@ -16,6 +17,11 @@ interface HeaderBarProps {
 export const HeaderBar: React.FC<HeaderBarProps> = ({ title, showBackButton, onBackPress }) => {
   const { currentUser, role } = useAuth();
   const navigation = useNavigation();
+  const [voiceEnabled, setVoiceEnabled] = useState(VoiceService.isVoiceEnabled);
+
+  const toggleVoice = () => {
+    setVoiceEnabled(VoiceService.toggleVoice());
+  };
 
   return (
     <View style={styles.header}>
@@ -48,6 +54,13 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ title, showBackButton, onB
       </Pressable>
 
       <View style={styles.rightContainer}>
+        <Pressable onPress={toggleVoice} style={styles.voiceToggle}>
+          {voiceEnabled ? (
+            <Volume2 size={22} color={COLORS.primary} />
+          ) : (
+            <VolumeX size={22} color={COLORS.textSecondary} />
+          )}
+        </Pressable>
         <OfflineBadge />
       </View>
     </View>
@@ -94,7 +107,12 @@ const styles = StyleSheet.create({
   rightContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
+  },
+  voiceToggle: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.infoBg,
   },
   pressed: {
     opacity: 0.8,
