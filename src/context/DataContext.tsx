@@ -9,7 +9,9 @@ interface DataContextType {
   gameSessions: GameSession[];
   analytics: any | null;
   activePatientId: string | null;
+  gameDifficulties: Record<string, number>;
   setActivePatientId: (id: string | null) => void;
+  updateGameDifficulty: (gameType: string, level: number) => void;
   fetchPatientData: (patientId: string) => Promise<void>;
   addMemory: (item: Omit<MemoryItem, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>) => void;
   deleteMemory: (id: string) => void;
@@ -27,6 +29,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [gameSessions, setGameSessions] = useState<GameSession[]>([]);
   const [analytics, setAnalytics] = useState<any | null>(null);
   const [activePatientId, setActivePatientId] = useState<string | null>(null);
+  const [gameDifficulties, setGameDifficulties] = useState<Record<string, number>>({});
+
+  const updateGameDifficulty = (gameType: string, level: number) => {
+    setGameDifficulties((prev) => ({ ...prev, [gameType]: level }));
+  };
 
   const fetchPatientData = async (patientId: string) => {
     try {
@@ -148,7 +155,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         gameSessions,
         analytics,
         activePatientId,
+        gameDifficulties,
         setActivePatientId,
+        updateGameDifficulty,
         fetchPatientData,
         addMemory,
         deleteMemory,

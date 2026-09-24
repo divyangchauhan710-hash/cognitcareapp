@@ -65,10 +65,11 @@ export const MemoryRecallGameScreen: React.FC<{ navigation: any }> = ({
   navigation,
 }) => {
   const { currentUser } = useAuth();
-  const { addGameSession } = useData();
+  const { addGameSession, gameDifficulties } = useData();
   // Game Phase: 'memorize' | 'recall' | 'completed'
   const [phase, setPhase] = useState<'memorize' | 'recall' | 'completed'>('memorize');
-  const [currentDifficulty, setCurrentDifficulty] = useState<number>(2);
+  const savedDifficulty = gameDifficulties['memory_recall'] || 2;
+  const [currentDifficulty, setCurrentDifficulty] = useState<number>(savedDifficulty);
 
   const diffConfig = DIFFICULTY_CONFIGS[currentDifficulty] || DIFFICULTY_CONFIGS[2];
   const [timerSeconds, setTimerSeconds] = useState<number>(diffConfig.timeLimitSeconds);
@@ -79,7 +80,7 @@ export const MemoryRecallGameScreen: React.FC<{ navigation: any }> = ({
 
   // Setup game round on mount or difficulty change
   useEffect(() => {
-    startNewRound(2);
+    startNewRound(savedDifficulty);
   }, []);
 
   const startNewRound = (diffLevel: number) => {

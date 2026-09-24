@@ -1,7 +1,7 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { Brain, Activity, ArrowLeft } from 'lucide-react-native';
+import { Brain, Activity, ArrowLeft, Layers, Calculator } from 'lucide-react-native';
 import { HeaderBar } from '../../components/HeaderBar';
 import { LargeActionCard } from '../../components/LargeActionCard';
 import { SectionHeader } from '../../components/SectionHeader';
@@ -36,12 +36,30 @@ export const GamesListScreen: React.FC<{ navigation: any }> = ({ navigation }) =
         />
 
         <LargeActionCard
-          title="Game 2: Attention Game"
-          subtitle="Find target shapes and tap matching objects quickly"
+          title="Game 2: Pattern Sequence"
+          subtitle="Memorize and repeat the flashing block sequences"
           icon={Activity}
           variant="teal"
           badgeText="Adaptive"
-          onPress={() => navigation.navigate('AttentionGame')}
+          onPress={() => navigation.navigate('PatternSequenceGame')}
+        />
+
+        <LargeActionCard
+          title="Game 3: Category Sorting"
+          subtitle="Find the odd item out from the categories"
+          icon={Layers}
+          variant="hero"
+          badgeText="Adaptive"
+          onPress={() => navigation.navigate('CategorySortingGame')}
+        />
+
+        <LargeActionCard
+          title="Game 4: Math Puzzles"
+          subtitle="Solve simple arithmetic problems"
+          icon={Calculator}
+          variant="teal"
+          badgeText="Adaptive"
+          onPress={() => navigation.navigate('MathPuzzlesGame')}
         />
       </ScrollView>
     </SafeAreaView>

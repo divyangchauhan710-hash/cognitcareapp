@@ -22,7 +22,7 @@ interface GameResultsScreenProps {
   navigation?: any;
   route?: {
     params?: {
-      gameType: 'memory_recall' | 'attention';
+      gameType: string;
       score: number;
       accuracy: number;
       responseTimeMs: number;
@@ -31,10 +31,12 @@ interface GameResultsScreenProps {
       previousDifficulty: number;
       nextDifficulty: number;
       feedbackMessage: string;
-      recommendedGame: 'memory_recall' | 'attention';
+      recommendedGame: string;
     };
   };
 }
+
+import { useData } from '../../context/DataContext';
 
 export const GameResultsScreen: React.FC<GameResultsScreenProps> = ({
   navigation,
@@ -53,7 +55,35 @@ export const GameResultsScreen: React.FC<GameResultsScreenProps> = ({
     recommendedGame = 'attention',
   } = route?.params || {};
 
+  const { updateGameDifficulty } = useData();
+
+  React.useEffect(() => {
+    if (gameType && nextDifficulty) {
+      updateGameDifficulty(gameType, nextDifficulty);
+    }
+  }, [gameType, nextDifficulty]);
+
   const responseTimeSec = (responseTimeMs / 1000).toFixed(1);
+
+  const getGameName = (type: string) => {
+    switch(type) {
+      case 'memory_recall': return 'Memory Recall Training';
+      case 'pattern_sequence': return 'Pattern Sequence Training';
+      case 'category_sorting': return 'Category Sorting Training';
+      case 'math_puzzles': return 'Math Puzzles Training';
+      default: return 'Cognitive Training';
+    }
+  };
+
+  const getGameRoute = (type: string) => {
+    switch(type) {
+      case 'memory_recall': return 'MemoryRecallGame';
+      case 'pattern_sequence': return 'PatternSequenceGame';
+      case 'category_sorting': return 'CategorySortingGame';
+      case 'math_puzzles': return 'MathPuzzlesGame';
+      default: return 'PatientHome';
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -66,7 +96,7 @@ export const GameResultsScreen: React.FC<GameResultsScreenProps> = ({
           </View>
           <Text style={styles.heroTitle}>Session Completed!</Text>
           <Text style={styles.heroSub}>
-            {gameType === 'memory_recall' ? 'Memory Recall Training' : 'Attention Training'}
+            {getGameName(gameType)}
           </Text>
 
           <View style={styles.scoreContainer}>
@@ -109,26 +139,16 @@ export const GameResultsScreen: React.FC<GameResultsScreenProps> = ({
         {/* CTAs */}
         <View style={styles.ctaContainer}>
           <PrimaryButton
-            title={`Play Next: ${
-              recommendedGame === 'memory_recall' ? 'Memory Recall' : 'Attention Game'
-            }`}
+            title={`Play Next: ${getGameName(recommendedGame)}`}
             icon={Play}
             variant="hero"
-            onPress={() =>
-              navigation.navigate(
-                recommendedGame === 'memory_recall' ? 'MemoryRecallGame' : 'AttentionGame'
-              )
-            }
+            onPress={() => navigation.navigate(getGameRoute(recommendedGame))}
           />
 
           <SecondaryButton
             title="Play This Game Again"
             icon={RotateCcw}
-            onPress={() =>
-              navigation.navigate(
-                gameType === 'memory_recall' ? 'MemoryRecallGame' : 'AttentionGame'
-              )
-            }
+            onPress={() => navigation.navigate(getGameRoute(gameType))}
             style={{ marginTop: 10 }}
           />
 

@@ -3,7 +3,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { PatientHomeScreen } from '../screens/patient/PatientHomeScreen';
 import { GamesListScreen } from '../screens/patient/GamesListScreen';
 import { MemoryRecallGameScreen } from '../screens/patient/MemoryRecallGameScreen';
-import { AttentionGameScreen } from '../screens/patient/AttentionGameScreen';
+import { PatternSequenceGameScreen } from '../screens/patient/PatternSequenceGameScreen';
+import { CategorySortingGameScreen } from '../screens/patient/CategorySortingGameScreen';
+import { MathPuzzlesGameScreen } from '../screens/patient/MathPuzzlesGameScreen';
 import { GameResultsScreen } from '../screens/patient/GameResultsScreen';
 import { MemoryBankScreen } from '../screens/patient/MemoryBankScreen';
 import { PersonalizedMemoryActivityScreen } from '../screens/patient/PersonalizedMemoryActivityScreen';
@@ -20,7 +22,9 @@ export const PatientNavigator = () => {
       <Stack.Screen name="PatientHome" component={PatientHomeScreen} />
       <Stack.Screen name="Games" component={GamesListScreen} />
       <Stack.Screen name="MemoryRecallGame" component={MemoryRecallGameScreen} />
-      <Stack.Screen name="AttentionGame" component={AttentionGameScreen} />
+      <Stack.Screen name="PatternSequenceGame" component={PatternSequenceGameScreen} />
+      <Stack.Screen name="CategorySortingGame" component={CategorySortingGameScreen} />
+      <Stack.Screen name="MathPuzzlesGame" component={MathPuzzlesGameScreen} />
       <Stack.Screen name="GameResults" component={GameResultsScreen} />
       <Stack.Screen name="MemoryBank" component={MemoryBankScreen} />
       <Stack.Screen name="PersonalizedMemoryActivity" component={PersonalizedMemoryActivityScreen} />

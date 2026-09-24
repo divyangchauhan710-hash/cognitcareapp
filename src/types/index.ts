@@ -12,7 +12,7 @@ export interface UserProfile {
 export interface GameSession {
   id: string;
   patientId: string;
-  gameType: 'memory_recall' | 'attention';
+  gameType: 'memory_recall' | 'pattern_sequence' | 'category_sorting' | 'math_puzzles';
   score: number; // 0 - 100
   accuracy: number; // 0 - 100%
   responseTimeMs: number;

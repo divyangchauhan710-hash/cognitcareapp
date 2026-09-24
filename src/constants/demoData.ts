@@ -122,7 +122,7 @@ export const INITIAL_GAME_SESSIONS: GameSession[] = [
   {
     id: 'gs-102',
     patientId: 'patient-rita-72',
-    gameType: 'attention',
+    gameType: 'pattern_sequence',
     score: 80,
     accuracy: 80,
     responseTimeMs: 2800,

@@ -5,7 +5,7 @@ export interface PerformanceInput {
   responseTimeMs: number;
   mistakes: number;
   currentDifficulty: number; // 1 - 4
-  gameType: 'memory_recall' | 'attention';
+  gameType: string;
 }
 
 export interface AdaptiveEngineResult {
@@ -13,7 +13,7 @@ export interface AdaptiveEngineResult {
   itemCount: number;
   timeLimitSeconds: number;
   hintAvailable: boolean;
-  recommendedGame: 'memory_recall' | 'attention';
+  recommendedGame: string;
   feedbackMessage: string;
 }
 
@@ -63,8 +63,9 @@ export class AdaptiveCognitivePersonalizationEngine {
     const config = DIFFICULTY_CONFIGS[nextDifficulty] || DIFFICULTY_CONFIGS[2];
 
     // Recommend alternate game type to encourage balanced cognitive domain training
-    const recommendedGame =
-      input.gameType === 'memory_recall' ? 'attention' : 'memory_recall';
+    const ALL_GAMES = ['memory_recall', 'pattern_sequence', 'category_sorting', 'math_puzzles'];
+    const otherGames = ALL_GAMES.filter(g => g !== input.gameType);
+    const recommendedGame = otherGames[Math.floor(Math.random() * otherGames.length)];
 
     return {
       nextDifficulty,
